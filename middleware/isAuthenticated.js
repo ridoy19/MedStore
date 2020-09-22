@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-module.exports = async (req, res, next) => {
+module.exports = (req, res, next) => {
     const authHeader = req.get('Authorization');
     if (!authHeader) {
         return res.status(401).send({
@@ -11,7 +11,7 @@ module.exports = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     let decodedToken;
     try {
-        decodedToken = await jwt.verify(token, process.env.JWT_SECRET);
+        decodedToken = jwt.verify(token, process.env.JWT_SECRET);
     } catch (error) {
         next(error);
     }

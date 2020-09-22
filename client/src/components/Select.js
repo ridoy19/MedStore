@@ -5,6 +5,8 @@ function Select(props) {
         <div>
             <select 
                 id={props.id}
+                name={props.name}
+                value={props.value}
                 className={props.className} 
                 style={props.style}>
                 {props.children}

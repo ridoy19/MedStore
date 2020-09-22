@@ -10,8 +10,6 @@ import NavBar from '../components/NavBar'
 import Companies from '../pages/Companies'
 import NotFound from '../pages/NotFound'
 import Cart from '../pages/Cart'
-
-import { CartProvider, CartContext } from '../context/CartContext';
 import Checkout from '../pages/Checkout';
 import Signin from '../pages/Signin';
 import Signup from '../pages/Signup';
@@ -25,6 +23,7 @@ import { totalItem } from '../helpers/CartHelper';
 import PaymentSucess from '../pages/PaymentSuccess';
 import EmptyCart from './EmptyCart';
 import EditOrderAdmin from '../components/EditOrderAdmin'
+import NoOrder from './NoOrder';
 
 const SideNav = () => {
     const authContext = useContext(AuthContext)
@@ -37,7 +36,6 @@ const SideNav = () => {
     }
 
     return (
-        <CartProvider>
         <React.Fragment>
             <Router>
                 {/* <NavBar /> */}
@@ -117,14 +115,15 @@ const SideNav = () => {
                     <div className="col-10">
                         <Switch>
                             <Route path="/" exact component={Home} />
-                            <Route path="/companies" component={Companies} />
-                            <Route path="/carts" component={Cart} />
-                            <Route path="/checkout" component={Checkout} />
-                            <Route path="/signin" component={Signin} />
-                            <Route path="/signup" component={Signup} />
+                            <Route path="/companies" exact component={Companies} />
+                            <Route path="/carts" exact component={Cart} />
+                            <Route path="/checkout" exact component={Checkout} />
+                            <Route path="/signin" exact component={Signin} />
+                            <Route path="/signup" exact component={Signup} />
                             <Route path="/empty-cart" component={EmptyCart} />
-                            <Route path="/payment-success" component={PaymentSucess} />
-                            <Route path="/admin/edit-orders/:orderId" component={EditOrderAdmin} />
+                            <AdminRouting exact path="/admin/order-list/no-orders" component={NoOrder} />
+                            <Route path="/payment-success" exact component={PaymentSucess} />
+                            <AdminRouting path="/admin/edit-orders/:orderId" exact component={EditOrderAdmin} />
 
                             <GuardedRouting path='/user/dashboard' exact component={UserDashboard} />
                             <AdminRouting path='/admin/dashboard' exact component={AdminDashBoard} />
@@ -135,7 +134,6 @@ const SideNav = () => {
                 </div>
                 </Router>
         </React.Fragment>
-        </CartProvider>
     )
 }
 

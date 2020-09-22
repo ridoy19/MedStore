@@ -11,6 +11,8 @@ const Input = (props) => {
                 value={props.value}
                 id={props.id}
                 disabled={props.disabled}
+                readOnly={props.readOnly}
+                checked={props.checked}
                 onChange={props.onChange}
                 placeholder={props.placeholder}
                 />

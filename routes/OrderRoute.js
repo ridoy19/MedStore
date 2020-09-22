@@ -6,9 +6,11 @@ const isAuthenticated = require('../middleware/isAuthenticated');
 const isAdmin = require('../middleware/isAdmin');
 
 router.route('/place-order/:userId').post(isAuthenticated, OrderController.placeOrder);
-router.route('/orders-list/:userId').get(isAuthenticated, isAdmin, OrderController.listOrders);
+router.route('/orders-list').get(isAuthenticated, isAdmin, OrderController.listOrders);
 // TO-DO (work with the below routes)
 router.route('/update-order/:orderId/:userId').put(isAuthenticated, isAdmin, OrderController.updateOrder);
+router.route('/:orderId').get(isAuthenticated, OrderController.getSingleOrder);
+router.route('/remove-order/:orderId').delete(isAuthenticated, isAdmin, OrderController.deleteOrder);
 
 
 module.exports = router;

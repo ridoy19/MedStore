@@ -6,6 +6,7 @@ import { listOrders } from '../api/OrderAPI';
 import Card from '../components/Card';
 import moment from 'moment'
 import EditOrderAdmin from '../components/EditOrderAdmin';
+import { deleteOrder } from '../api/OrderAPI'
 
 function AdminDashBoard() {
     const authContext = useContext(AuthContext);
@@ -13,23 +14,40 @@ function AdminDashBoard() {
     //console.log(authContext)
     const [allOrders, setAllOrders] = useState([]);
     const getAllOrders = async () => {
-        const res = await listOrders(authContext.userState.user._id, authContext.userState.token);
-        // console.log(res);
+        const res = await listOrders(authContext.userState.token);
+        console.log(res);
         setAllOrders(res.data.data);
     }
 
-    const handleDeleteIconClick = (e) => {
-        console.log('Cliked Delete')
+    const removeOrder = async (token, orderId) => {
+        const res = await deleteOrder(token, orderId);
+        console.log(res);
+        const res1 = await listOrders(authContext.userState.token);
+        setAllOrders(res1.data.data)
+        console.log(res1);
     }
+
+    // const removeOrder = async (token, orderId) => {
+    //     try {
+    //         const res = await deleteOrder(token, orderId)
+    //         console.log(res);
+    //     } catch (error) {
+    //         console.log(error)
+    //     }
+    // }
+
+    // const handleDeleteIconClick = (e) => {
+    //     removeOrder(authContext.userState.token, )
+    // }
 
     // https://codereview.stackexchange.com/questions/212250/generating-a-table-based-on-an-array-of-objects
     // TO-DO: Generate Table
-    const genTable = allOrders.length > 0 && allOrders.map((order, oIndex) => {
+    const genTable = allOrders && allOrders.length > 0 && allOrders.map((order, oIndex) => {
         return (
             <tr key={oIndex}>
                 <td>{order._id}</td>
                 <td>{moment(order.createdAt).format('lll')}</td>
-                {
+                {/* {
                     order.products.map((prod, pIndex) => {
                         return (
                             <tr key={pIndex}>
@@ -38,12 +56,12 @@ function AdminDashBoard() {
                             </tr>                            
                         )
                     })
-                }
+                } */}
                 <td>&#2547; {order.subtotal}</td>
                 <td>{order.shipping_address}</td>
                 <td><span className="badge badge-warning">{order.status}</span></td>
                 <td><Link className="fa fa-edit" to={`/admin/edit-orders/${order._id}`} style={{color: '#009999'}}></Link></td>
-                <td onClick={handleDeleteIconClick}><i className="fa fa-trash" style={{color: 'red'}}></i></td>
+                <td onClick={() => removeOrder(authContext.userState.token, order._id)}><i className="fa fa-trash" style={{color: 'red'}}></i></td>
             </tr>
         )
     })

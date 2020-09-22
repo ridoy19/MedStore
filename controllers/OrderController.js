@@ -59,7 +59,7 @@ const sendEmail = async (recipent, order) => {
     // send mail with defined transport object
     let info = await transporter.sendMail({
         from: `"Botomul 👻" <${process.env.SMTP_EMAIL}>`, // sender address
-        to: recipent, // list of receivers
+        to: `${recipent}, ${process.env.SMTP_EMAIL}`, // list of receivers
         subject: `Order Confirmation ${order._id} ✔`, // Subject line
         text: `Hello, ${order.user.name}. Your order has been recieved.\n\n.
                 We will contact you as soon as possible.\n`, // plain text body
@@ -67,11 +67,13 @@ const sendEmail = async (recipent, order) => {
                 We will contact you as soon as possible.\n`, // html body
         attachments: [
             {
-                path: 'invoice.pdf'
+                filename: 'invoice.pdf',
+                path: 'invoice/invoice.pdf'
             }
         ]
     });
 }
+
 
 const placeOrder = async (req, res, next) => {
     console.log('Order ', req.body)
@@ -145,6 +147,8 @@ const updateOrder = async (req, res, next) => {
         const {
             products,
             shipping_address,
+            phone,
+            paymentMethod,
             status
         } = req.body;
         if (!mongoose.Types.ObjectId.isValid(orderId)) {
@@ -153,9 +157,15 @@ const updateOrder = async (req, res, next) => {
             })
         }
 
+        if (!status || !shipping_address || !phone || !paymentMethod) {
+            res.status(400).send({
+                success: false,
+                message: `All field must have value provided!`
+            })
+        }
         const update = {
             //    products: products,
-            //    shipping_address: shipping_address,
+            // shipping_address: shipping_address,
             status: status
         }
         const foundOrder = await Order
@@ -169,6 +179,11 @@ const updateOrder = async (req, res, next) => {
             })
         }
 
+        if (!foundOrder.user.equals(req.userInfo._id) && req.userInfo.isAdmin !== 1) {
+            res.status(401).send({
+                message: `Not authorized to perform the action`
+            })
+        }
         await Order.updateOne({
             _id: orderId
         }, update, {
@@ -186,8 +201,80 @@ const updateOrder = async (req, res, next) => {
 }
 
 
+const getSingleOrder = async (req, res, next) => {
+    try {
+        const {orderId} = req.params;
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            return res.status(422).send({
+                message: `Provided id is not valid!`
+            })
+        }
+        const foundOrder = await Order.findOne({_id: orderId});
+        
+        if (!foundOrder) {
+            res.status(404).send({
+                message: `Order not found!`
+            })
+        }
+        if (!foundOrder.user.equals(req.userInfo._id) && req.userInfo.isAdmin !== 1) {
+            res.status(403).send({
+                message: `Not authorized to perform the action!`
+            })
+        }
+        res.send({
+            data: foundOrder
+        })
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+
+const deleteOrder = async (req, res, next) => {
+    try {
+        const {orderId} = req.params;
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            res.status(422).send({
+                message: `Provided id is not valid!`
+            })
+        }
+        const foundOrder = await Order.findById({
+            _id: orderId
+        })
+        if (!foundOrder) {
+            res.status(404).send({
+                message: `No order found~`
+            })
+        }
+        // const foundUser = await User.findById({
+        //     _id: foundOrder.user
+        // })
+        // // Checking if the logged user is not the owner of the post
+        // if (!foundOrder.user.equals(req.userInfo._id) && req.userInfo.isAdmin !== 1) {
+        //     res.status(403).send({
+        //         message: `Not authorized to perform the action!`
+        //     })
+        // }
+        const deletedItem = await Order.deleteOne({
+            _id: orderId
+        })
+
+        // await foundUser.order_history.pull(orderId)
+        // await foundUser.save()
+
+        res.json({
+            message: `Order deleted successfully!`
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     placeOrder,
     listOrders,
-    updateOrder
+    updateOrder,
+    getSingleOrder,
+    deleteOrder
 }

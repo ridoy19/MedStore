@@ -9,7 +9,14 @@ const OrderSchema = new mongoose.Schema({
     },
     shipping_address: {
         type: String,
-        // required: true
+        required: true
+    },
+    phone: {
+        type: String,
+        required: true
+    },
+    paymentMethod: {
+        type: String
     },
     status: {
         type: String,

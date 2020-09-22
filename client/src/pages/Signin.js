@@ -25,7 +25,7 @@ function Signin() {
         if (authContext.userState.isAuthenticated && authContext.userState.user.isAdmin === 1) {
             return history.push('/admin/dashboard')
         }else {
-            return history.push('/user/dashboard')
+            return history.push('/carts')
         }
     }
 

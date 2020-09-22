@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react'
-import { CartContext } from '../context/CartContext';
 import Axios from 'axios';
 import Button from '../components/Button'
 import { dosageImage } from '../helpers/dosageImage';
-import { Link, Redirect } from 'react-router-dom';
+import { Link, Redirect, useHistory } from 'react-router-dom';
 import Checkout from './Checkout';
 import { emptyCart, getCart, getCartItemSpecificInfo } from '../helpers/CartHelper';
 import EmptyCart from '../components/EmptyCart';
@@ -12,11 +11,14 @@ import DropIn from 'braintree-web-drop-in-react';
 import { processPayment } from '../braintree/processPayment';
 import PaymentSuccess from './PaymentSuccess';
 import { placeOrder } from '../api/CartAPI';
+import Input from '../components/Input';
+
 
 const Cart = () => {
 	const authContext = useContext(AuthContext);
 	const [cartItem, setCartItem] = useState([]);
 	const [count, setCount] = useState(1)
+	const history = useHistory();
 	// console.log(authContext)
 	const getTotal = cartItem.reduce( ( sum, { total } ) => sum + total , 0)
 	// console.log(result)
@@ -26,6 +28,8 @@ const Cart = () => {
 		clientToken: null,
 		error: '',
 		shipping_address: '',
+		phone: '',
+		paymentMethod: '',
 		instance: {},
 		userInfo: {}
 	});
@@ -48,6 +52,10 @@ const Cart = () => {
 
 	const handleAdress = (e) => {
 		setClientToken({...clientToken, shipping_address: e.target.value})
+	}
+
+	const handlePhone = (e) => {
+		setClientToken({...clientToken, phone: e.target.value})
 	}
 	console.log(clientToken)
 
@@ -116,7 +124,9 @@ const Cart = () => {
 				products: JSON.parse(localStorage.getItem('cart')),
 				transaction_id: res.data.transaction.id,
 				subtotal: res.data.transaction.amount,
-				shipping_address: clientToken.shipping_address
+				shipping_address: clientToken.shipping_address,
+				phone: clientToken.phone,
+				paymentMethod: res.data.transaction.creditCard.cardType
 			}
 
 			//console.log(orderData)
@@ -130,7 +140,7 @@ const Cart = () => {
 
 			});
 			//console.log(orderRes)
-			
+			// history.push('/payment-success')
 		} catch (error) {
 			console.log(error)
 			setClientToken({...clientToken, error: error})
@@ -144,6 +154,7 @@ const Cart = () => {
 				{
 					clientToken.clientToken !== null && cartItem.length > 0 ? 
 					<div>
+						<h3>Billing/Shipping Info</h3>
 						<textarea 
 							rows="3" 
 							onChange={handleAdress}
@@ -153,14 +164,108 @@ const Cart = () => {
 							placeholder='Enter shipping address...'>
 
 						</textarea>
-						<DropIn 
-							options={{
-								authorization: clientToken.clientToken,
-							}} 
-							onInstance={
-								instance => clientToken.instance = instance
-							}
-						/>
+						<Input 
+							type="text" 
+							onChange={handlePhone}
+							name="phone"
+							value={clientToken.phone}
+							className="form-control mt-2 mb-4"
+							style={{height: 45}} 
+							placeholder='Enter mobile no(e.g. 01710000100)' />
+						<div id="accordion">
+							<div>
+								<div className="card-header" id="headingOne">
+								<h5 className="mb-0">
+									<button 
+										className="btn btn-link text-dark" 
+										style={{textDecoration: 'none'}}
+										data-toggle="collapse" 
+										data-target="#collapseOne" 
+										aria-expanded="true" 
+										aria-controls="collapseOne">
+											Pay with card
+									</button>
+								</h5>
+								</div>
+								<div 
+									id="collapseOne" 
+									className="collapse show" 
+									aria-labelledby="headingOne" 
+									data-parent="#accordion">
+									<div className="card-body">
+									<DropIn 
+										options={{
+											authorization: clientToken.clientToken,
+										}} 
+										onInstance={
+											instance => clientToken.instance = instance
+										}
+									/>
+									</div>
+								</div>
+								<div>
+									<div className="card-header" id="headingTwo">
+									<h5 className="mb-0">
+										<button 
+											className="btn btn-link collapsed text-dark"
+											style={{textDecoration: 'none'}} 
+											data-toggle="collapse" 
+											data-target="#collapseTwo" 
+											aria-expanded="false" 
+											aria-controls="collapseTwo">
+												Pay with bKash
+										</button>
+									</h5>
+									</div>
+									<div 
+										id="collapseTwo" 
+										className="collapse" 
+										aria-labelledby="headingTwo" 
+										data-parent="#accordion">
+									<div className="card-body">
+										Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+									</div>
+									</div>
+								</div>
+								<div>
+									<div className="card-header" id="headingThree">
+									<h5 className="mb-0">
+										<button 
+											className="btn btn-link collapsed text-dark"
+											style={{textDecoration: 'none'}}  
+											data-toggle="collapse" 
+											data-target="#collapseThree" 
+											aria-expanded="false" 
+											aria-controls="collapseThree">
+												Cash on delivery
+										</button>
+									</h5>
+									</div>
+									<div 
+										id="collapseThree" 
+										className="collapse" 
+										aria-labelledby="headingThree" 
+										data-parent="#accordion">
+									<div className="card-body">
+										<div className="form-check">
+										<Input 
+											className="form-check-input" 
+											type="radio" 
+											name="exampleRadios" 
+											id="exampleRadios1" 
+											readOnly
+											value="option1" checked />
+										<label 
+											className="form-check-label" 
+											htmlFor="exampleRadios1">
+											This is to certify that you will pay cash on delivery.
+										</label>
+										</div>
+									</div>
+									</div>
+								</div>
+							</div>
+						</div>
 						<button 
 							onClick={buy} 
 							className="btn btn-out btn-primary btn-square btn-main"
@@ -345,9 +450,18 @@ const Cart = () => {
 								<strong>&#2547; {(getTotal).toFixed(2)}</strong>
 							</dd>
 	                    </dl>
-	                    <hr/> 
-						
-						{!authContext.userState.isAuthenticated && cartItem.length > 0 ? 
+	                     
+	                </div>
+	            </div>
+	        </aside>
+							
+	    </div>
+		<hr/>
+		<div className="row">
+			<div className="col-lg">
+			<div className="card">
+				<div className="card-body">
+					{!authContext.userState.isAuthenticated && cartItem.length > 0 ? 
 						<Link 
 							className="btn btn-out btn-primary btn-square btn-main" 
 							to="/signin"
@@ -362,11 +476,11 @@ const Cart = () => {
 						<Link to="/" 
 							className="btn btn-out btn-success btn-square btn-main mt-2" 
 							>Continue Shopping</Link>
-	                </div>
-	            </div>
-	        </aside>
-
-	    </div>
+				</div>
+			</div>
+			</div>
+			
+		</div>
 		{/* <Checkout  dataToken={clientToken} dataItem={cartItem} /> */}
 
 	</div>
